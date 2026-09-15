@@ -1,0 +1,27 @@
+HTTP/1.1 200 OK
+date: Tue, 15 Sep 2026 18:04:28 GMT
+server: uvicorn
+content-length: 35
+content-type: application/json
+
+# response headers — no security headers present:
+-- full raw headers:
+HTTP/1.1 200 OK
+date: Tue, 15 Sep 2026 18:04:28 GMT
+server: uvicorn
+content-length: 35
+content-type: application/json
+
+-- /docs exposed (HTTP 200):
+200
+-- CORS wildcard:
+HTTP/1.1 405 Method Not Allowed
+date: Tue, 15 Sep 2026 18:04:28 GMT
+server: uvicorn
+allow: GET
+content-length: 31
+content-type: application/json
+access-control-allow-origin: *
+
+HTTP/1.1 405 Method Not Allowed
+access-control-allow-origin: *

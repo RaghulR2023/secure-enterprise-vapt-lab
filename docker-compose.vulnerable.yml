@@ -1,0 +1,43 @@
+# ==========================================================================
+# VULNERABLE overlay — WARNING: authorized lab use only.
+#
+# Enables the intentionally vulnerable application AND the insecure
+# network architecture (VULN-008). Use together with the base file:
+#
+#   docker compose -f docker-compose.yml \
+#                 -f docker-compose.vulnerable.yml up --build
+#
+# Vulnerabilities introduced by this overlay:
+#   - APP_MODE=vulnerable flips all application-layer weaknesses
+#   - the database is PUBLISHED to the host on port 5432
+#   - the frontend (public zone) is attached to the database network,
+#     breaking the intended trust-boundary segmentation
+# ==========================================================================
+
+services:
+  backend:
+    environment:
+      APP_MODE: vulnerable
+      SECRET_KEY: techcorp-fixed-lab-secret-key-please-change   # VULN-003
+      TOKEN_EXPIRE_MINUTES: "0"                                 # VULN-003
+
+  frontend:
+    networks:
+      - frontend-network
+      - backend-network
+      - database-network      # VULN-008: public zone has direct DB access
+
+  postgres:
+    ports:
+      - "5432:5432"           # VULN-008: database published to the host
+    networks:
+      - database-network
+      - backend-network       # VULN-008: DB exposed to the app-zone net
+
+networks:
+  frontend-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+  database-network:
+    driver: bridge

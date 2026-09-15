@@ -1,0 +1,10 @@
+== VULN-008 Network Architecture: database reachable from host/public zone ==
+# With docker-compose.vulnerable.yml, postgres is published to host port 5432:
+psql -h 127.0.0.1 -p 5432 -U techcorp -d techcorp -c "SELECT username,role FROM users;"
+
+# Direct DB access bypasses ALL application-layer authorization (API authz,
+# role checks, row-level ownership). The frontend container is also attached
+# to database-network, so the public zone can reach the DB directly.
+
+# (Lab environments differ on the host port; the finding is the EXPOSURE itself.
+#  docker-compose.secure.yml removes the exposure: db stays internal-only.)

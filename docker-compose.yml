@@ -1,0 +1,83 @@
+# ==========================================================================
+# TechCorp lab — base (secure) configuration.
+#
+#   docker compose up --build          -> secure/remediated build
+#   APP_MODE=vulnerable docker compose up --build   -> vulnerable app build
+#
+# To also enable the vulnerable NETWORK architecture (VULN-008) use:
+#   docker compose -f docker-compose.yml \
+#                 -f docker-compose.vulnerable.yml up --build
+#
+# Network model:
+#   frontend-network : browser-facing zone (frontend container)
+#   backend-network  : application zone (backend container)
+#   database-network : data zone       (postgres container)
+#
+# Trust boundaries:
+#   - frontend is attached to frontend- + backend-network (proxy -> API)
+#   - backend  is attached to backend-  + database-network (API -> DB)
+#   - postgres is attached to database-network ONLY (never published to
+#     the host, never reachable from the frontend zone)
+# ==========================================================================
+
+services:
+  frontend:
+    build: ./frontend
+    container_name: techcorp-frontend
+    ports:
+      - "8080:80"                 # user-facing web UI
+    depends_on:
+      - backend
+    networks:
+      - frontend-network
+      - backend-network           # enables the nginx reverse proxy to the API
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: techcorp-backend
+    environment:
+      APP_MODE: ${APP_MODE:-secure}
+      DATABASE_URL: postgresql+psycopg2://techcorp:techcorp@postgres:5432/techcorp
+      SECRET_KEY: ${SECRET_KEY:-}
+      TOKEN_EXPIRE_MINUTES: ${TOKEN_EXPIRE_MINUTES:-30}
+    ports:
+      - "8000:8000"               # host-accessible API (lab/testing convenience)
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend-network
+      - database-network          # backend may reach the database
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: techcorp-db
+    environment:
+      POSTGRES_USER: techcorp
+      POSTGRES_PASSWORD: techcorp   # lab-only credential — see README
+      POSTGRES_DB: techcorp
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U techcorp -d techcorp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - database-network          # data zone ONLY — not exposed to host
+    restart: unless-stopped
+
+networks:
+  frontend-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+  database-network:
+    driver: bridge
+    internal: true                # no external gateway for the data zone
+
+volumes:
+  pgdata:

@@ -1,0 +1,29 @@
+# ==========================================================================
+# SECURE overlay — explicit remediation configuration (VULN-008).
+#
+#   docker compose -f docker-compose.yml \
+#                 -f docker-compose.secure.yml up --build
+#
+# Re-establishes the intended trust boundaries:
+#   - database-network is internal (no external gateway)
+#   - postgres is NOT published to the host
+#   - the frontend/public zone is NOT attached to the database network
+# ==========================================================================
+
+services:
+  backend:
+    environment:
+      APP_MODE: secure
+
+  postgres:
+    networks:
+      - database-network
+
+networks:
+  frontend-network:
+    driver: bridge
+  backend-network:
+    driver: bridge
+  database-network:
+    driver: bridge
+    internal: true

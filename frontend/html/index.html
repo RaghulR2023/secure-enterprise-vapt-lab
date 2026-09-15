@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechCorp Store</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">TechCorp<span class="brand-sub">Marketplace</span></div>
+    <nav id="nav" class="nav hidden">
+      <button data-view="products">Products</button>
+      <button data-view="orders">My Orders</button>
+      <button data-view="profile">Profile</button>
+      <button data-view="admin" id="admin-nav" class="hidden">Admin</button>
+      <button data-view="logout" class="ghost">Logout</button>
+    </nav>
+  </header>
+
+  <main id="app" class="container"></main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

